@@ -1,0 +1,2 @@
+# Mini-Blog
+Minimaler Blog
