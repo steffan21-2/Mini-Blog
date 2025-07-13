@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini-Blog mit Kommentaren</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #7e8ea5;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    h1 {
+      color: #333;
+    }
+    .post {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .post h2 {
+      margin: 0 0 5px;
+    }
+    .post p {
+      margin: 0 0 10px;
+    }
+    .delete-btn {
+      float: right;
+      background: red;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .comment-box {
+      margin-top: 10px;
+    }
+    .comment-box input {
+      width: 80%;
+      padding: 5px;
+      margin-right: 5px;
+    }
+    .comment {
+      padding: 5px 10px;
+      margin-top: 5px;
+      background: #eee;
+      border-radius: 5px;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      background: #58e933;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .content {
+      flex: 1; /* Füllt den verfügbaren Raum */
+      padding: 20px;
+    }
+    footer {
+      background-color: #2f2f2f;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini-Blog</h1>
+
+  <!-- Formular zum Hinzufügen von Beiträgen -->
+  <div>
+    <input type="text" id="titleInput" placeholder="Titel eingeben" />
+    <textarea id="contentInput" rows="4" placeholder="Beitrag schreiben..."></textarea>
+    <button onclick="addPost()">Beitrag hinzufügen</button>
+  </div>
+
+  <hr />
+
+  <!-- Hier erscheinen alle Beiträge -->
+  <div id="postList"></div>
+
+  <script>
+    const postList = document.getElementById("postList");
+
+    // Beitrag hinzufügen
+    function addPost() {
+      const title = document.getElementById("titleInput").value.trim();
+      const content = document.getElementById("contentInput").value.trim();
+      if (!title || !content) return alert("Titel und Inhalt dürfen nicht leer sein.");
+
+      const post = {
+        id: Date.now(),
+        title,
+        content,
+        comments: [] // Kommentare mit einbauen
+      };
+
+      displayPost(post);
+      savePost(post);
+
+      document.getElementById("titleInput").value = "";
+      document.getElementById("contentInput").value = "";
+    }
+
+    // Beiträge speichern
+    function savePost(post) {
+      let posts = JSON.parse(localStorage.getItem("posts")) || [];
+      posts.push(post);
+      localStorage.setItem("posts", JSON.stringify(posts));
+    }
+
+    // Beitrag löschen
+    function deletePost(id, btn) {
+      btn.parentElement.remove();
+      let posts = JSON.parse(localStorage.getItem("posts")) || [];
+      posts = posts.filter(p => p.id !== id);
+      localStorage.setItem("posts", JSON.stringify(posts));
+    }
+
+    // Beitrag anzeigen
+    function displayPost(post) {
+      const div = document.createElement("div");
+      div.className = "post";
+      div.dataset.id = post.id;
+
+      div.innerHTML = `
+        <button class="delete-btn" onclick="deletePost(${post.id}, this)">Löschen</button>
+        <h2>${post.title}</h2>
+        <p>${post.content}</p>
+        <div class="comments" id="comments-${post.id}"></div>
+        <div class="comment-box">
+          <input type="text" placeholder="Kommentar schreiben..." id="commentInput-${post.id}" />
+          <button onclick="addComment(${post.id})">Kommentieren</button>
+        </div>
+      `;
+
+      postList.prepend(div);
+
+      // Kommentare anzeigen
+      post.comments.forEach(comment => {
+        displayComment(post.id, comment);
+      });
+    }
+
+    // Kommentar anzeigen
+    function displayComment(postId, comment) {
+      const commentContainer = document.getElementById(`comments-${postId}`);
+      const commentDiv = document.createElement("div");
+      commentDiv.className = "comment";
+      commentDiv.textContent = comment;
+      commentContainer.appendChild(commentDiv);
+    }
+
+    // Kommentar hinzufügen
+    function addComment(postId) {
+      const input = document.getElementById(`commentInput-${postId}`);
+      const comment = input.value.trim();
+      if (!comment) return;
+
+      // Kommentar im DOM anzeigen
+      displayComment(postId, comment);
+      input.value = "";
+
+      // Kommentar auch im Speicher hinzufügen
+      let posts = JSON.parse(localStorage.getItem("posts")) || [];
+      const post = posts.find(p => p.id === postId);
+      if (post) {
+        post.comments.push(comment);
+        localStorage.setItem("posts", JSON.stringify(posts));
+      }
+    }
+
+    // Beiträge beim Start laden
+    function loadPosts() {
+      let posts = JSON.parse(localStorage.getItem("posts")) || [];
+      posts.forEach(displayPost);
+    }
+
+    loadPosts();
+  </script>
+  <footer>
+    © 2025 Steffan Arnold – Portfolio
+  </footer>
+</body>
+</html>
